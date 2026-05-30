@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Ulang Tahun Sayangg</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #ffdae0;
+            --primary-color: #d63384;
+            --text-dark: #4a0e2e;
+            --card-bg: #fff0f3;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Container utama ala HP */
+        .phone-container {
+            width: 100%;
+            max-width: 412px;
+            height: 100vh;
+            max-height: 892px;
+            background-color: var(--bg-color);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Canvas untuk Animasi Love Jatuh */
+        #heartCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Elemen di atas Canvas harus diberi z-index lebih tinggi */
+        .content-layer {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .music-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--primary-color);
+        }
+
+        /* Sistem Halaman */
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .page.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        p {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(214, 51, 132, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .icon-flower {
+            font-size: 5rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .fade-text {
+            font-style: italic;
+            opacity: 0.7;
+            margin-bottom: 15px;
+        }
+
+        /* MODIFIKASI: Kamera Viewfinder Section */
+        .camera-section {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .camera-viewfinder {
+            flex: 1;
+            aspect-ratio: 4 / 3;
+            background-color: #000;
+            border: 3px solid #fff;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .camera-viewfinder img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Overlay UI Kamera */
+        .camera-ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Share Tech Mono', monospace;
+            color: #fff;
+            font-size: 11px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            pointer-events: none;
+            box-sizing: border-box;
+        }
+
+        .ui-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .rec-blink {
+            color: #ff3333;
+            font-weight: bold;
+            animation: blink 1s steps(2, start) infinite;
+        }
+
+        /* Frame siku kamera */
+        .camera-frame {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .camera-frame::before, .camera-frame::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border: 2px solid #fff;
+        }
+        .camera-frame::before { top: -2px; left: -2px; border-right: 0; border-bottom: 0; }
+        .camera-frame::after { bottom: -2px; right: -2px; border-left: 0; border-top: 0; }
+
+        /* Tombol D-Pad Kamera di Sebelah Kanan */
+        .camera-dpad {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.4);
+            padding: 8px;
+            border-radius: 20px;
+        }
+
+        .dpad-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Surat Kelopak */
+        .letter-box {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: left;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            max-height: 55%;
+            overflow-y: auto;
+        }
+
+        .letter-box h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        @keyframes blink { to { visibility: hidden; } }
+    </style>
+</head>
+<body>
+
+    <div class="phone-container">
+        <!-- Efek Animasi Love Terpasang di Background -->
+        <canvas id="heartCanvas"></canvas>
+        
+        <!-- Semua Konten Berada di Layer Ini -->
+        <div class="content-layer">
+            
+            <button class="music-toggle" id="musicBtn" onclick="toggleMusic()">🎵</button>
+            <audio id="bgMusic" loop>
+        <source src="selamatulangtahun.mp3.mp3"audio/mpeg">
+            </audio>
+
+            <!-- HALAMAN 1 -->
+            <div class="page active" id="page1">
+                <div class="icon-flower">🌸</div>
+                <h1>Special Buat<br>Sayangg kuu</h1>
+                <button class="btn" onclick="goToPage(2)">Buka Disini yaaa Cantikk</button>
+            </div>
+
+            <!-- HALAMAN 2 -->
+            <div class="page" id="page2">
+                <p class="fade-text">"Tunggu bentarr yaaa sayangg..."</p>
+                <p class="fade-text">"mass buatt sesuatu untukk adekk"</p>
+                <button class="btn" onclick="goToPage(3)">Pencet ini sayangg</button>
+            </div>
+
+            <!-- HALAMAN 3 -->
+            <div class="page" id="page3">
+                <p style="text-transform: uppercase; font-weight: bold; letter-spacing: 2px; font-size: 0.8rem;">Ini harii special kamu sayangg kuu</p>
+                <h1 style="font-size: 2.2rem; margin-top: 10px;">Happy Birthday<br><span style="color: #4a0e2e;">Jeni Bektiana</span></h1>
+                <p style="margin-top: 20px;">🌸09 Juni 2005 - 09 Juni 2026🌸</p>
+                <button class="btn" onclick="goToPage(4)">Buka Momen Kita Sayangg</button>
+            </div>
+
+            <!-- HALAMAN 4: Kamera Viewfinder Interaktif -->
+            <div class="page" id="page4">
+                <p style="font-weight: bold; margin-bottom: 20px; font-size: 0.9rem; letter-spacing: 1px;">Kenangan Indah Kita Sayangg</p>
+                
+                <div class="camera-section">
+                    <!-- Monitor Kamera -->
+                    <div class="camera-viewfinder">
+                        <img id="galleryImg" src="no1.jpg" alt="Memories">
+                        <div class="camera-frame"></div>
+                        <div class="camera-ui">
+                            <div class="ui-top">
+                                <span class="rec-blink">● REC</span>
+                                <span>[▰▰▰] 100%</span>
+                            </div>
+                            <div class="ui-bottom" style="display: flex; justify-content: space-between;">
+                                <span>RAW 4K 60fps</span>
+                                <span id="photoIndex">01/10</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tombol Navigasi Samping ala Kamera -->
+                    <div class="camera-dpad">
+                        <button class="dpad-btn" onclick="changePhoto(-1)">▲</button>
+                        <span style="font-size: 10px; font-weight: bold; color: var(--text-dark);">CH</span>
+                        <button class="dpad-btn" onclick="changePhoto(1)">▼</button>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="goToPage(5)">Lanjut Cantikk ➔</button>
+            </div>
+
+            <!-- HALAMAN 5 -->
+            <div class="page" id="page5">
+                <p style="font-size: 0.8rem; letter-spacing: 1px; font-weight: bold; margin-bottom: 10px;">SURAT CINTA</p>
+                <div class="letter-box">
+                    <h3>Haloo Sayangg kuu Jeni Bektiana,</h3>
+                    <p>Happy birthday, yaaa sayanggkuu. Hari ini adalahh hari spesial karenaa orang yang berartii dalamm hidup ee mass bertambah usia, mass bersyukurr bisaa kenal adekk, sayangg sama adekk, cintaa sama adekk, dan menemani perjalanan ee adekk sampaii sekarangg dan selamanyaa. Semogaa di umur yang baruu ini, semuaa impian dan harapann ee adekk bisaa tercapaii satu per satu. Semogaa adekk selaluu diberi kesehatan, kebahagiaan, rezeki yang lancar, adekk makin sukses, makinn sabarr ngadepinn mass, semogaa kuatt dalam  menghadapi setiap tantangan, dan semua yang adekk semogakan cepett terwujud amiinn. Maacii sayangg karena selama inii udaa jadii sosok senn selalu adaa, senn selalu memberii perhatiann, cintaa, semangatt buatt mass, dan warnaa dalam hidupp ee mass, maaff jika selama inii mass masii seringg buatt adekk kecewaa dan sedihh, mass akann teruss berusahaa menjadii pasangann yang lebihh baikk untukk adekk. Semogaa hubungann kitaa semakinn kuat, semakinn dewasa, dan selalu dipenuhii kebahagiaan. Apapunn senn terjadii nantii, mass inginn teruss berjalann barengg adekk, melewatii suka dan duka, hingga semua mimpii kita terwujud amiinn. Selamatt Ulangg Tahunn Sayanggkuu❤️, mass mencintaii adekk harii inii, besoo, dan seterusnyaa. Semogaa harii ini menjadii awal dari tahun yang penuh kbahagiaann bersamaa, semogaa adekk tetap memilihh mass teruss, love you so much! ❤️</p>
+                    <p style="text-align: right; font-weight: bold; margin-top: 15px; font-size: 0.9rem;">— Dari Calon Suamii, Mohammad Guntur Fassa Putra</p>
+                </div>
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <button class="btn" onclick="goToPage(4)" style="background-color: transparent; color: var(--primary-color); border: 2px solid var(--primary-color); box-shadow: none; flex: 1; padding: 12px;">Kembali</button>
+                    <button class="btn" onclick="goToPage(6)" style="flex: 1; padding: 12px;">Kejutann Sayanggkuu❤️</button>
+                </div>
+            </div>
+
+            <!-- HALAMAN 6 -->
+            <div class="page" id="page6">
+                <div class="icon-flower">🎂</div>
+                <h1>MAKE A WISH</h1>
+                <p style="font-size: 0.8rem; opacity: 0.7;">OUR MEMORY, DIGITALLY PRESERVED</p>
+                <div style="margin: 20px 0; border: 2px dashed var(--primary-color); padding: 15px; border-radius: 10px; background-color: #fff; width: 100%;">
+                    <p style="margin: 0; font-size: 0.9rem;">✨ Semogaa hubungann kitaa langgeng teruss sampai pelaminan yaaa Sayanggkuu❤️! ✨</p>
+                </div>
+                <button class="btn" onclick="alert('Link tersalin!')" style="width: 100%; margin-bottom: 10px;">Share to Story</button>
+                <button class="btn" onclick="window.print()" style="width: 100%; background-color: #4a0e2e; box-shadow: none;">Download Memory</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- 1. LOGIKA ANIMASI BACKGROUND LOVE & KELOPAK ---
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const heartParticles = [];
+        // Membuat data partikel love/kelopak pink
+        for (let i = 0; i < 25; i++) {
+            heartParticles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height - canvas.height,
+                size: Math.random() * 8 + 6,
+                speed: Math.random() * 1.5 + 1,
+                opacity: Math.random() * 0.6 + 0.4,
+                rotation: Math.random() * Math.PI
+            });
+        }
+
+        function drawHearts() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "rgba(214, 51, 132, 0.6)"; // Warna dasar kelopak/love pink
+
+            heartParticles.forEach(p => {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation);
+                ctx.globalAlpha = p.opacity;
+
+                // Menggambar bentuk Love kecil pada kanvas
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.bezierCurveTo(-p.size / 2, -p.size / 2, -p.size, p.size / 3, 0, p.size);
+                ctx.bezierCurveTo(p.size, p.size / 3, p.size / 2, -p.size / 2, 0, 0);
+                ctx.fill();
+                ctx.restore();
+
+                // Logika pergerakan jatuh ke bawah
+                p.y += p.speed;
+                p.rotation += 0.01;
+                if (p.y > canvas.height) {
+                    p.y = -20;
+                    p.x = Math.random() * canvas.width;
+                }
+            });
+            requestAnimationFrame(drawHearts);
+        }
+        drawHearts();
+
+        // --- 2. LOGIKA KONTROL KAMERA / GALERI ---
+        const photos = [
+            "no1.jpg",
+            "no2.jpg",
+            "no3.jpg",
+            "no4.jpg",
+            "no5.jpg",
+            "no6.jpg",
+            "no7.jpg",
+            "no8.jpg",
+            "no9.jpg",
+            "no10.jpg"
+        ];
+        let currentPhotoIndex = 0;
+
+        function changePhoto(dir) {
+            currentPhotoIndex += dir;
+            if (currentPhotoIndex < 0) currentPhotoIndex = photos.length - 1;
+            if (currentPhotoIndex >= photos.length) currentPhotoIndex = 0;
+
+            document.getElementById('galleryImg').src = photos[currentPhotoIndex];
+            // Format angka index (misal 01/03)
+            document.getElementById('photoIndex').innerText = `0${currentPhotoIndex + 1}/0${photos.length}`;
+        }
+
+        // --- 3. NAVIGASI HALAMAN & AUDIO ---
+        function goToPage(num) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(`page${num}`);
+            if (target) target.classList.add('active');
+
+            if (num === 2) {
+                document.getElementById('bgMusic').play().catch(() => {});
+            }
+        }
+
+        function toggleMusic() {
+            const audio = document.getElementById('bgMusic');
+            const btn = document.getElementById('musicBtn');
+            if (audio.paused) {
+                audio.play();
+                btn.innerText = "🎵";
+            } else {
+                audio.pause();
+                btn.innerText = "🔇";
+            }
+        }
+    </script>
+</body>
+</html>
